@@ -1,0 +1,12 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+  "image":"mcr.microsoft.com/devcontainers/javascript-node",
+  "onCreateCommand": ["./.devcontainer/on-create.sh"],
+  "customizations": {
+    "codespaces": {
+      "openFiles": [
+        "pack.ts"
+      ]
+    }
+  }
+}
