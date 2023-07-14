@@ -1,41 +1,41 @@
 // This import statement gives you access to all parts of the Coda Packs SDK.
 import * as coda from "@codahq/packs-sdk";
+import { fetchMovieData } from './helpers';
+import { MoviesSyncTable, MovieSchema } from './schemas';
 
 // This line creates your new Pack.
 export const pack = coda.newPack();
 
-// Here, we add a new formula to this Pack.
-pack.addFormula({
-  // This is the name that will be called in the formula builder.
-  // Remember, your formula name cannot have spaces in it.
-  name: "Hello",
-  description: "A Hello World example.",
+pack.setVersion('0.1.0');
+pack.defaultAuthentication = {
+  type: coda.AuthenticationType.HeaderBearerToken,
+  instructionsUrl: 'https://developers.themoviedb.org/3/getting-started/authentication',
+}
+pack.networkDomains = ['api.themoviedb.org'];
 
-  // If your formula requires one or more inputs, you’ll define them here.
-  // Here, we're creating a string input called “name”.
+pack.addFormula({
+  name: 'SearchMovies',
+  description: 'Search for movies by title.',
   parameters: [
     coda.makeParameter({
       type: coda.ParameterType.String,
-      name: "name",
-      description: "The name you would like to say hello to.",
+      name: 'title',
+      description: 'The title of the movie to search for.',
     }),
   ],
-
-  // The resultType defines what will be returned in your Coda doc. Here, we're
-  // returning a simple text string.
-  resultType: coda.ValueType.String,
-
-  // These examples are shown to the user, to help them understand how to use
-  // the formula.
-  examples: [
-    { params: ["World"], result: "Hello World!" },
-    { params: ["Coda"], result: "Hello Coda!" },
-  ],
-
-  // Everything inside this execute statement will happen anytime your Coda
-  // formula is called in a doc. An array of all user inputs is always the 1st
-  // parameter.
-  execute: async function ([name], context) {
-    return "Hello " + name + "!";
+  resultType: coda.ValueType.Array,
+  schema: MoviesSyncTable.schema,
+  execute: async function ([query], context) {
+    const movies = await fetchMovieData(query, { ...context, sync: true });
+    return movies.result.map(movie => {
+      return {
+        id: movie.id,
+        title: movie.title,
+        overview: movie.overview,
+        release_date: movie.release_date,
+        vote_average: movie.vote_average,
+        poster_path: movie.poster_path,
+      };
+    });
   },
 });
